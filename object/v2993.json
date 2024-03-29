@@ -1,0 +1,515 @@
+{
+  "SaveName": "",
+  "Date": "",
+  "VersionNumber": "",
+  "GameMode": "",
+  "GameType": "",
+  "GameComplexity": "",
+  "Tags": [],
+  "Gravity": 0.5,
+  "PlayArea": 0.5,
+  "Table": "",
+  "Sky": "",
+  "Note": "",
+  "TabStates": {},
+  "LuaScript": "",
+  "LuaScriptState": "",
+  "XmlUI": "",
+  "ObjectStates": [
+    {
+      "GUID": "9d92c9",
+      "Name": "Checker_Board",
+      "Transform": {
+        "posX": -7.08078432,
+        "posY": 0.960000038,
+        "posZ": 2.12073469,
+        "rotX": -1.526135E-07,
+        "rotY": 359.976929,
+        "rotZ": 2.74598531E-08,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "scaleZ": 1.0
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      },
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "--V2.9.9.3 N/A\r\nmath.randomseed(os.time())\r\n\r\n--Global variables\r\nDEBUG_MODE = false\r\n\r\nisCombatStarted = false\r\ncounter = 1\r\nbHide = false\r\nconfMsg = nil\r\nconfSender = nil\r\nconfirmTime = os.time()\r\nshowNumbersb = false\r\nlastNext = os.time()\r\n\r\nstats = {}\r\nlastTime = os.time()\r\nroundNumber = 0\r\nshowNumbersb = false\r\ncurrentVisibility = \"Clubs\"\r\ncreatures = {}\r\nturnNumber = 1\r\nnumCreatures = 0\r\nlastSave = nil\r\n\r\n-- End global variables\r\n\r\nfunction doPrint(msg, isDbg)\r\n  if (DEBUG_MODE and isDbg) then\r\n    printToAll(msg)\r\n  elseif (not isDbg) then\r\n    printToAll(msg)\r\n  end\r\nend\r\n\r\nfunction toggleUI(player, value, id)\r\n  printToAll(\"sdfgsdfg\")\r\n  UI.hide(\"mapSelection\")\r\nend\r\n\r\nfunction minimizeUI(player, value, id)\r\n  UI.setAttribute(\"mapSelection\", \"height\", \"25\")\r\n  UI.setAttribute(\"mapSelection\", \"width\", \"40\")\r\n  UI.setAttribute(\"mapSelectionScroll\", \"width\", \"0\")\r\n  UI.setAttribute(\"mapSelectionScroll\", \"height\", \"0\")\r\n  UI.setAttribute(\"minimizeBtn\", \"visibility\", \"Invisible\")\r\n  UI.setAttribute(\"title\", \"visibility\", \"Invisible\")\r\n  UI.setAttribute(\"restoreBtn\", \"visibility\", \"\")\r\n  UI.setAttribute(\"restoreBtn\", \"textColor\", \"White\")\r\n  --minimizeBtn\"restoreBtn\r\nend\r\n\r\nfunction restoreUI(player, value, id)\r\n  UI.setAttribute(\"mapSelection\", \"height\", \"500\")\r\n  UI.setAttribute(\"mapSelection\", \"width\", \"480\")\r\n  UI.setAttribute(\"mapSelectionScroll\", \"height\", \"480\")\r\n  UI.setAttribute(\"mapSelectionScroll\", \"width\", \"480\")\r\n  UI.setAttribute(\"minimizeBtn\", \"visibility\", \"\")\r\n  UI.setAttribute(\"minimizeBtn\", \"textColor\", \"White\")\r\n  UI.setAttribute(\"restoreBtn\", \"visibility\", \"Invisible\")\r\n  UI.setAttribute(\"title\", \"visibility\", \"\")\r\nend\r\n\r\nfunction onLoad(save_state)\r\n  --printToAll(\"onLoad called\")\r\n  globalUI = [[\r\n    <Defaults>\r\n    <Panel id=\"Window\" class=\"TankChessPanel\" color=\"#595959\" outline=\"#635351\" outlineSize=\"2 -2\" />\r\n    <Button class=\"mapButton\" padding=\"0 0 145 0\" textColor=\"#FFFFFF\"\r\n        colors=\"#AD9F91|#C9B9A9|#756C63|rgba(0.78,0.78,0.78,0.5)\" />\r\n    <Image class=\"mapImage\" width=\"144\" height=\"144\" rectAlignment=\"UpperCenter\" offsetXY=\"0 -3\" />\r\n</Defaults>\r\n\r\n<Panel id=\"mapSelection\" class=\"TankChessPanel\"\r\n    width=\"480\"\r\n    height=\"500\"\r\n    rectAlignment=\"UpperCenter\"\r\n    offsetXY=\"0 -250\"\r\n    allowDragging=\"true\"\r\n    showAnimation=\"FadeIn\"\r\n    showAnimationDelay=\"2\"\r\n    returnToOriginalPositionWhenReleased=\"false\">\r\n    <VerticalScrollView\r\n        id=\"mapSelectionScroll\"\r\n        rectAlignment=\"LowerCenter\"\r\n        offsetXY=\"0 -00\"\r\n        scrollSensitivity=\"40\"\r\n        padding=\"0 0 50 0\"\r\n        scrollbarColors=\"#AD9F91|#C9B9A9|#756C63|rgba(0.78,0.78,0.78,0.5)\"\r\n        width=\"480\"\r\n        height=\"480\"\r\n        color=\"#000000\">\r\n        <VerticalLayout padding=\"3 0 8 3\" spacing=\"8 8\" height=\"1000\" width=\"460\"\r\n            childForceExpandHeight=\"false\">\r\n            <Button id=\"nxtBtn\" minWidth=\"200\" color=\"blue\" minHeight=\"50\" position=\"0,800,-30\"\r\n                visibility=\"White\" onClick=\"{guid}/nextTurn\">Next Turn</Button>\r\n\r\n\r\n            <Text height=\"1500\" width=\"1500\" id=\"turnOrder\" color=\"Green\" fontSize=\"17\"\r\n                horizontalOverflow=\"Wrap\" verticalOverflow=\"OverFlow\"\r\n                alignment=\"UpperLeft\">Type +{inishudiv} {player name} to add players/monsters</Text>\r\n        </VerticalLayout>\r\n    </VerticalScrollView>\r\n    <HorizontalLayout\r\n        rectAlignment=\"UpperRight\"\r\n        width=\"40\"\r\n        height=\"20\"\r\n    >\r\n        <Button id=\"minimizeBtn\"\r\n            width=\"20\"\r\n            height=\"20\"\r\n            color=\"#990000\"\r\n            textColor=\"#FFFFFF\"\r\n            fontSize=\"12\"\r\n            text=\"M\"\r\n            onClick=\"{guid}/minimizeUI\">\r\n        </Button>\r\n\r\n        <Button id=\"restoreBtn\"\r\n            position=\"10,10\"\r\n            width=\"20\"\r\n            height=\"20\"\r\n            color=\"#990000\"\r\n            textColor=\"#FFFFFF\"\r\n            fontSize=\"12\"\r\n            text=\"M\"\r\n            visibility=\"Invisible\"\r\n            onClick=\"{guid}/restoreUI\">\r\n        </Button>\r\n\r\n    </HorizontalLayout>\r\n    <Text id=\"title\" text=\"Initive Tracker - Version 2.9.9.3 - 05/03/23\" alignment=\"UpperLeft\"\r\n        fontSize=\"18\"\r\n        offsetXY=\"5 0\"\r\n        fontStyle=\"Bold\" color=\"#FFFFFF\"></Text>\r\n</Panel>\r\n]]\r\n  globalUI = string.gsub(globalUI, \"{guid}\", self.guid)\r\n  --print(globalUI)\r\n  UI.setXml(globalUI)\r\n  UI.hide(\"Window\")\r\n  if (save_state == nil or save_state == '') then\r\n    --Do nothing. This is a new game.\r\n  else\r\n    local saved = JSON.decode(save_state)\r\n    stats = saved[\"stats\"]\r\n    lastTime = saved[\"lastTime\"]\r\n    roundNumber = saved[\"roundNumber\"]\r\n    showNumbersb = saved[\"showNumbersb\"]\r\n    currentVisibility = saved[\"currentVisibility\"]\r\n    creatures = saved[\"creatures\"]\r\n    if (not table.empty(creatures)) then\r\n      startInit()\r\n    end\r\n\r\n    turnNumber = saved[\"turnNumber\"]\r\n    numCreatures = saved[\"numCreatures\"]\r\n    updateCreatures()\r\n  end\r\n  --Clear the screen\r\n  for j = 1, 3 do\r\n    for i = 1, 7 do\r\n      doPrint(\"\", false)\r\n    end\r\n  end\r\nend\r\n\r\nfunction onUpdate()\r\n  UI.setAttribute(\"nxtBtn\", \"visibility\", currentVisibility)\r\nend\r\n\r\ncurrentPlayer = \"\"\r\n\r\nfunction parseToken(token)\r\n  if (string.match(token, \"^N:\")) then\r\n    token = tonumber(string.sub(token, 3))\r\n  elseif (string.match(token, \"^B:\")) then\r\n    token = string.sub(token, 3)\r\n    token = token == \"true\"\r\n  elseif (string.match(token, \"^F:\")) then\r\n    token = string.sub(token, 3)\r\n  elseif (string.match(token, \"^V:\")) then\r\n    token = string.sub(token, 3)\r\n  elseif (string.match(token, \"^P:\")) then\r\n    token = string.sub(token, 3)\r\n  end\r\n  return token\r\nend\r\n\r\n--[[\r\n  This is a debug Function. Below are some examples. Not advised for public lobbies.\r\n  -P:turnNumber - prints the value of turnNumber (global variable)\r\n  -F:updateCreatures - calls the function updateCreatures(), updating creatures list.\r\n  -V:turnNumber 5 - sets the value of turnNumber to 5\r\n  -V:debugVar B:true - sets the value of debugVar to true\r\n  -V:debugVar B:false - sets the value of debugVar to false\r\n  ]]\r\nfunction doFunc(message, sender)\r\n  message = message:gsub(\"^-\", \"\")\r\n  local lst = {}\r\n  for token in string.gmatch(message, \"[^%s]+\") do\r\n    table.insert(lst, token)\r\n  end\r\n\r\n  local tmp = _G\r\n  for i = 1, #lst do\r\n    --printToAll(\"counter :\" .. i .. \": token :\" .. lst[i] .. \":\")\r\n    local token = lst[i]\r\n    local token_parsed = parseToken(token)\r\n    if (string.match(token, \"^F:\")) then\r\n      tmp = tmp[token_parsed]()\r\n    elseif (string.match(token, \"^V:\")) then\r\n      tmp[token_parsed] = parseToken(lst[i + 1])\r\n      return\r\n    elseif (string.match(token, \"^P:\")) then\r\n      printToAll(token_parsed .. \" = \" .. tmp[token_parsed])\r\n    else\r\n      tmp = tmp[token_parsed]\r\n    end\r\n  end\r\nend\r\n\r\n-- This is where the chat messages are parsed into actions.\r\nfunction onChat(message, sender)\r\n  message = message:gsub(\"[ ]+\", \" \")\r\n  -- We use string.sub for the commands that have parameters. e.g. \".goto 5\" runs the goto command with parameter 5.\r\n  -- Exact matches do not take parameters.\r\n  if (string.sub(message, 1, 1) == \"+\") then\r\n    addCreature(message, sender.color, sender.steam_name)\r\n  elseif (string.sub(message, 1, 1) == \"-\") then      -- This and the above look for a single character\r\n    doFunc(message, sender)\r\n  elseif (string.sub(message, 1, 4) == \".del\") then   -- Look for \".del\"\r\n    createConfirm(message, sender)\r\n  elseif (message == \".next\") then                    -- Look for \".next\"\r\n    createConfirm(message, sender)\r\n  elseif (string.sub(message, 1, 5) == \".goto\") then  -- Look for \".goto\"\r\n    local gotoNum = tonumber(string.sub(message, 7))\r\n    if (gotoNum == nil) then\r\n      printToAll(\"Invalid number. Please reference .shownumbers\")\r\n      return\r\n    end\r\n    nextTurn(\"\", gotoNum)\r\n  elseif (message == \".start\") then\r\n    startInit()\r\n  elseif (message == \".stop\") then\r\n    createConfirm(message, sender)\r\n  elseif (message == \".stats\") then\r\n    getStats(false)\r\n  elseif (message == \".statsfull\") then\r\n    getStats(true)\r\n  elseif (message == \".shownumbers\") then\r\n    showNumbers()\r\n  elseif (message == \".confirm\") then\r\n    checkConfirm(sender)\r\n  elseif (message == \".con\") then\r\n    checkConfirm(sender)\r\n  elseif (message == \".help\") then\r\n    printHelp()\r\n  elseif (string.sub(message, 1, 5) == \".swap\") then\r\n    doSwap(message)\r\n  elseif (string.sub(message, 1, 1) == \".\") then\r\n    rollDice(message, sender.steam_name)\r\n  else\r\n    return true\r\n  end\r\n  return false\r\nend\r\n\r\nfunction confirmed(message, sender)\r\n  if (string.sub(message, 1, 4) == \".del\") then\r\n    removeCreature(message)\r\n  elseif (message == \".next\") then\r\n    nextTurn(\"\", \"-1\")\r\n  elseif (message == \".stop\") then\r\n    stopInit()\r\n    getStats(false)\r\n  end\r\nend\r\n\r\n-- The main purpose of requiring confirmation is to prevent multiple people performing the same action.\r\nfunction createConfirm(message, sender)\r\n  if (message == \".next\") then\r\n    if (sender.color == creatures[turnNumber][\"owner\"]) then\r\n      confirmed(message, sender)\r\n      return\r\n    else\r\n      doPrint(\"It is not your turn.\", false)\r\n    end\r\n  end\r\n\r\n  if (confMsg == nil) then\r\n    -- For destructive commands, confirm with the user.\r\n    confirmTime = os.time()\r\n    doPrint(\"Please confirm this action with '.confirm' or '.con'. Waiting for 10 seconds.\", false)\r\n    confMsg = message\r\n    confSender = sender\r\n  else\r\n    -- If multiple people try to confirm at the same time, cancel all.\r\n    doPrint(\"Conflicting requests received... Cancelling all.\", false)\r\n    confMsg = nil\r\n    confSender = nil\r\n  end\r\nend\r\n\r\nfunction checkConfirm(sender)\r\n  if ((os.time() - confirmTime) > 20) then\r\n    -- We only wait 20 seconds.\r\n    doPrint(\"Confirm timed out, Reseting...\", false)\r\n    confMsg = nil\r\n    confSender = nil\r\n    return\r\n  end\r\n\r\n  if (confMsg == nil or confSender == nil) then\r\n    doPrint(\"There is nothing to confirm.\", false)\r\n  elseif (not (sender.color == confSender.color)) then\r\n    doPrint(\"You do not have a pending command.\", false)\r\n  else\r\n    doPrint(\"Confirmed.\", false)\r\n    confirmed(confMsg, confSender) -- Do the prompted command.\r\n    confMsg = nil\r\n    confSender = nil\r\n  end\r\nend\r\n\r\nfunction printHelp()\r\n  doPrint(\"+Inititive CreatureName\", false)\r\n  doPrint(\"--Adds the specified creature to the encounter with that Inititive\", false)\r\n  doPrint(\".del\", false)\r\n  doPrint(\"--Deletes the item at this turn number. (Starts at 1, false)\")\r\n  doPrint(\".next\", false)\r\n  doPrint(\"--Forces the next turn button to be pressed.\", false)\r\n  doPrint(\".start\", false)\r\n  doPrint(\"--Starts the encounter with the given creatures.\", false)\r\n  doPrint(\".stop\", false)\r\n  doPrint(\"--Stops the encounter and clears the list.\", false)\r\n  doPrint(\".stats\", false)\r\n  doPrint(\"--Prints the average time for each creature.\", false)\r\n  doPrint(\".statsfull\", false)\r\n  doPrint(\"--Prints the full time stats for each creature.\", false)\r\n  doPrint(\".swap X Y\", false)\r\n  doPrint(\"--Swaps player X and Player Y. (Used for ties, false)\")\r\n  doPrint(\".goto X\", false)\r\n  doPrint(\"--sets the next turn to this player. (Does not increment round number, false)\")\r\n  doPrint(\".XdY+Z\", false)\r\n  doPrint(\"--Rolls X dice with Y sides, adding Z to each die rolled. (Used for to hits, false)\")\r\n  doPrint(\".XdY_Z\", false)\r\n  doPrint(\"--Rolls X dice with Y sides added together with the mod Z. (Used for damage, false)\")\r\n  doPrint(\".help\", false)\r\n  doPrint(\"--Unknown, you should try it.\", false)\r\nend\r\n\r\nfunction removeCreature(message)\r\n  message = rgsub(message, \".del \", \"\")\r\n  toDel = tonumber(message)\r\n  if (turnNumber >= toDel) then\r\n    turnNumber = turnNumber - 1\r\n  end\r\n  doPrint(\"deleting \" .. toDel, false)\r\n  table.remove(creatures, toDel)\r\n  updateCreatures()\r\nend\r\n\r\nfunction getStats(isFull) -- Prints the stats for each creature.\r\n  if (len(stats) == 0) then\r\n    doPrint(\"No stats collected. Play some rounds.\", false)\r\n  end\r\n  local numCreatures2 = len(stats)\r\n\r\n  local i = 0\r\n  for k, v in pairs(stats) do\r\n    i = i + 1\r\n    local name = k\r\n    local tmp = 0\r\n    local min = 9999999999\r\n    local max = -9999999999\r\n    local num = 0\r\n    for j = 1, len(stats[name]) do\r\n      if (tonumber(stats[name][j]) < 600) then\r\n        num = num + 1\r\n        tmp = tmp + stats[name][j]\r\n        if (stats[name][j] < min) then\r\n          min = stats[name][j]\r\n        end\r\n        if (stats[name][j] > max) then\r\n          max = stats[name][j]\r\n        end\r\n      end\r\n    end\r\n    if (num > 1) then\r\n      tmp = tmp / num\r\n    end\r\n    if (isFull) then\r\n      local statTxt = name ..\r\n      \"=> Avg: \" ..\r\n      math.floor(tonumber(tmp)) ..\r\n      \"s Min: \" ..\r\n      math.floor(tonumber(min)) .. \"s Max: \" .. math.floor(tonumber(max)) .. \"s Num: \" .. math.floor(tonumber(num))\r\n      doPrint(statTxt, false)\r\n    else\r\n      doPrint(name .. \" => \" .. math.floor(tonumber(tmp)))\r\n    end\r\n  end\r\nend\r\n\r\nfunction checkTurnNumber() -- Logic for round counting\r\n  if (not isCombatStarted) then\r\n    roundNumber = 1\r\n    return\r\n  end\r\n  if (turnNumber > numCreatures) then\r\n    roundNumber = roundNumber + 1\r\n    doPrint(\"Top of the round! Round #\" .. roundNumber, false)\r\n    turnNumber = 1\r\n  end\r\nend\r\n\r\nfunction showNumbers() -- Show creatures with their index in the array.\r\n  showNumbersb = not showNumbersb\r\n  updateCreatures()\r\nend\r\n\r\nfunction nextTurn(userData, newTurnNumber) -- Note: userData is not used. However, it's being sent from the button. The button fails without it.\r\n  updateCreatures()\r\n  numCreatures = len(creatures)\r\n  if (not isCombatStarted and numCreatures > 0) then\r\n    doPrint(\"Warning: Combat has not been started yet. To start, type .start\", false)\r\n    return\r\n  elseif (not isCombatStarted) then\r\n    doPrint(\"No creatures defined. Please add creatures with \\\"+inititive Creature Name\\\"\")\r\n    return\r\n  end\r\n\r\n  if (turnNumber < 0 or turnNumber > numCreatures or turnNumber == nil or nextTurn == '') then\r\n    doPrint(\"There was an error in the turn number. It has been reset to start.\", false)\r\n    turnNumber = 0\r\n  end\r\n  --doPrint((os.time(, false) - lastNext))\r\n  if ((os.time() - lastNext) < 0.15) then\r\n    local tmp1 = (os.time() - lastNext)\r\n    local tmp2 = f_round(tmp1, 2)\r\n    doPrint(\"Please wait 1.5 seconds between next turns. (\" .. tmp2 .. \"s)\") --math.floor((os.time() - lastNext),2))\r\n    --doPrint(\"This function is broken. You need to wait 1.5 seconds.\")--math.floor((os.time() - lastNext),2))\r\n    return\r\n  end\r\n  lastNext = os.time()\r\n\r\n  checkTurnNumber()\r\n  doPrint(\"_length of stats: \" .. len(stats), true)\r\n  if (stats[creatures[turnNumber].name] == nil) then\r\n    stats[creatures[turnNumber].name] = {}\r\n  end\r\n  doPrint(\"length of stats: \" .. len(stats), true)\r\n\r\n\r\n  local tmp = os.time() - lastTime\r\n  --doPrint(\"length of stats2: \" .. len(stats[creatures[turnNumber].name], false))\r\n  table.insert(stats[creatures[turnNumber].name], tmp)\r\n  --doPrint(\"length of stats2: \" .. len(stats[creatures[turnNumber].name], false))\r\n  lastTime = os.time()\r\n\r\n\r\n  local patt = '[0-9]+'\r\n  local isNum = string.match(newTurnNumber, patt)\r\n\r\n  doPrint(\"turnNumber: \", true)\r\n  doPrint(turnNumber, true)\r\n  doPrint(\"numCreatures: \", true)\r\n  doPrint(numCreatures, true)\r\n  doPrint(\"isNum: \", true)\r\n  doPrint(isNum, true)\r\n\r\n\r\n\r\n\r\n  local NextTurnNumberInt = tonumber(newTurnNumber)\r\n  if (NextTurnNumberInt == -1) then\r\n    debugMessage(\"Incrementing turn number\")\r\n    turnNumber = turnNumber + 1\r\n  else\r\n    debugMessage(\"Setting custom turnNumber\")\r\n    debugMessage(newTurnNumber)\r\n    doPrint(\"NextTurnNumberInt: \", true)\r\n    doPrint(NextTurnNumberInt, true)\r\n    doPrint(\"newTurnNumber: \", true)\r\n    doPrint(newTurnNumber, true)\r\n    if (NextTurnNumberInt < 0 or NextTurnNumberInt > numCreatures) then\r\n      doPrint(\"That creature does not exist...\", false)\r\n      return\r\n    end\r\n    turnNumber = NextTurnNumberInt\r\n  end\r\n\r\n\r\n\r\n\r\n\r\n  checkTurnNumber()\r\n\r\n  local msg = creatures[turnNumber].name .. \"'s Turn!\";\r\n  broadcastAll(msg);\r\n  self.UI.setAttribute(\"nxtBtn\", \"visibility\", creatures[turnNumber].owner)\r\n  UI.setAttribute(\"nxtBtn\", \"visibility\", creatures[turnNumber].owner)\r\n  debugMessage(\"Setting visibility to: \" .. creatures[turnNumber].owner)\r\n  currentVisibility = creatures[turnNumber].owner\r\n  updateCreatures()\r\nend\r\n\r\nfunction f_round(num, numDecimalPlaces)\r\n  if numDecimalPlaces and numDecimalPlaces > 0 then\r\n    local mult = 10 ^ numDecimalPlaces\r\n    return math.floor(num * mult + 0.5) / mult\r\n  end\r\n  return math.floor(num + 0.5)\r\nend\r\n\r\nfunction removePrefix(input_string)\r\n  local _, index = string.find(input_string, \" \")\r\n  if index then\r\n    return string.sub(input_string, index + 1)\r\n  end\r\n  return \"\"\r\nend\r\n\r\nfunction addCreature(message, color, steam_name)\r\n  message = rgsub(message, \"+\", \"\")\r\n\r\n  --This if statement is because of Stebe.\r\n  if (string.match(message, \"%(.*%)\")) then                 -- % shows that the character needs to be taken litterally. Normally \"\\(\" in other languages.\r\n    message = string.gsub(message, \"%(.*%)\", \"(idiot)\")     --if you try to add a fake color in your monster name, it gets replaced.\r\n  end\r\n\r\n  local tmp = split(message, \" \")\r\n  local initNum = tmp[1]\r\n  local isNum = string.match(initNum, '[0-9]+')   -- verify this is a number via regex\r\n  if (isNum == nil) then\r\n    doPrint(\"Not a number. Inititive needs to be a number\", false)\r\n    return\r\n  end\r\n\r\n  local creatureName = removePrefix(message)\r\n\r\n\r\n  if (creatureName == nil or creatureName == \"\") then\r\n    printToAll(\"There was an error with the name of the monster. Please try again. Defaulting to Player name\")\r\n    creatureName = string.sub(steam_name, 1, 8)\r\n  end\r\n\r\n  if (numCreatures > 0) then\r\n    --doPrint(\"Current init: \" .. creatures[turnNumber][\"init\"], false)\r\n    --doPrint(\"New init: \" .. a, false)\r\n    if (tonumber(creatures[turnNumber][\"init\"]) < tonumber(initNum)) then\r\n      turnNumber = turnNumber + 1\r\n    end\r\n  end\r\n\r\n  if (creatureName == nil) then\r\n    doPrint(\"No name entered.\", false)\r\n    return\r\n  end\r\n\r\n  --doPrint(a, false)\r\n  --doPrint(_BoolVar_, false)\r\n\r\n  --doPrint(\"init: \" .. a .. \". Name: \" .. _BoolVar_, false)\r\n  --dumpArr({\"init: \", a , \"Name: \", _BoolVar_}, \"raw creature data\")\r\n  local tmp = {}\r\n  tmp[\"init\"] = tonumber(initNum)\r\n  tmp[\"name\"] = creatureName\r\n  tmp[\"owner\"] = color   --\"host\"\r\n  --dump(creatures)\r\n  --dump(tmp)\r\n  table.insert(creatures, tmp)\r\n  --creatures.insert(tmp)\r\n\r\n  updateCreatures()\r\nend\r\n\r\nfunction stopInit() -- Stops the current session.\r\n  isCombatStarted = false\r\n  creatures = {}\r\n  --stats = {}    turnNumber = 1\r\n  numCreatures = 0\r\n  currentVisibility = \"clubs\"\r\n  UI.setAttribute(\"nxtBtn\", \"visibility\", \"clubs\")\r\n  updateCreatures()\r\nend\r\n\r\nfunction doSwap(message) -- Swaps two creatures's places\r\n  --dumper(creatures, \"doSwap\", 0)\r\n  local tmp = split(message, \" \")\r\n\r\n  local first = tonumber(tmp[2])\r\n  local second = tonumber(tmp[3])\r\n  if (first > numCreatures or second > numCreatures) then\r\n    doPrint(\"That number is out of range.\", false)\r\n    return\r\n  end\r\n  --doPrint(first, true)\r\n  --doPrint(second, true)\r\n\r\n  local tmp2 = creatures[first] -- TODO: add nil checks\r\n  creatures[first] = creatures[second]\r\n  creatures[second] = tmp2\r\n\r\n  updateCreatures()\r\nend\r\n\r\nfunction onSave() -- BUILT IN FUNCTION. Happens on save.\r\n  if (numCreatures <= 0) then\r\n    return \"\"\r\n  end\r\n\r\n  lastSave = os.date(\"Last save: %H:%M:%S%p\")\r\n\r\n  local saved = {}\r\n  saved[\"stats\"] = stats\r\n  saved[\"lastTime\"] = lastTime\r\n  saved[\"roundNumber\"] = roundNumber\r\n  saved[\"showNumbersb\"] = showNumbersb\r\n  saved[\"currentVisibility\"] = currentVisibility\r\n  saved[\"creatures\"] = creatures\r\n  saved[\"turnNumber\"] = turnNumber\r\n  saved[\"numCreatures\"] = numCreatures\r\n  local json = JSON.encode_pretty(saved)\r\n  updateCreatures()\r\n  return json\r\nend\r\n\r\n--Allows checking if the array is empty\r\nfunction table.empty(self)\r\n  for _, _ in pairs(self) do\r\n    return false\r\n  end\r\n  return true\r\nend\r\n\r\nfunction debugMessage(msg)\r\n  if (DEBUG_MODE) then\r\n    doPrint(msg, true)\r\n  end\r\nend\r\n\r\nfunction startInit()\r\n  if (isCombatStarted == true) then\r\n    doPrint(\"Combat has already started...\", false)\r\n    return\r\n  end\r\n  isCombatStarted = true\r\n  debugMessage(\"test123\")   --doPrint(\"startInit(, false)\")\r\n  if (numCreatures == 0) then\r\n    doPrint(\"No creatures added. use +Inititive CreatureName first.\", false)\r\n    return\r\n  end\r\n  lastTime = os.time()\r\n  stats = {}\r\n  turnNumber = 1\r\n  roundNumber = 1\r\n  broadcastAll(\"Number of Creatures: \" .. numCreatures)\r\n\r\n  broadcastAll(creatures[turnNumber].owner .. \"'s Turn!\");\r\n  UI.setAttribute(\"nxtBtn\", \"visibility\", creatures[turnNumber].owner)\r\n  debugMessage(\"Setting visibility to: \" .. creatures[turnNumber].owner)\r\n  currentVisibility = creatures[turnNumber].owner\r\n  updateCreatures()\r\n  doPrint(\"Top of the round! Round #\" .. roundNumber, false)\r\n  --local current_timestamp = os.time()\r\n  --local current_time = os.date(\"%Y-%m-%d %H:%M:%S\", current_timestamp)\r\n  --print(\"finished loading\")\r\n  --print(current_time)\r\nend\r\n\r\nfunction broadcastAll(msg)\r\n  rgb = { r = 1, g = 1, b = 1 }\r\n  broadcastToAll(msg, rgb)   -- built in function\r\nend\r\n\r\nfunction compare(a, b)\r\n  return tonumber(a[\"init\"]) > tonumber(b[\"init\"])\r\nend\r\n\r\n--[[\r\n  This function does the actual text on the ui.\r\n    It concatenates the creature name, init, and owner.\r\n    Specifically in the format of [init]: [name] ([owner's color])\r\n  ]]\r\nfunction updateCreatures()\r\n  --broadcastAll(\"B_numCreatures: \" .. numCreatures)\r\n  --broadcastAll(\"B_turnNumber: \" .. turnNumber)\r\n\r\n  checkTurnNumber()\r\n  --[[\r\n      By default, Lua uses an unstable sort. This means that when a large list of creatures get sorted,\r\n      creatures with the same init, can get randomly reordered. Since we're forcing a stable sort here,\r\n      that is not an issue. Order will be preserved.\r\n      ]]\r\n  table.stable_sort(creatures, compare)\r\n  --sortCreatures(creatures)\r\n  numCreatures = len(creatures)\r\n\r\n  local CreatureListTxt = \"\"\r\n  if (isCombatStarted) then\r\n    CreatureListTxt = \"Round #\" .. roundNumber .. \"\\n\"\r\n  elseif (numCreatures > 0) then\r\n    CreatureListTxt = \"Setup Phase\\n\"\r\n  else\r\n    CreatureListTxt = \"\"   -- If we have no creatures, we don't want to display anything\r\n  end\r\n\r\n  for i = 1, numCreatures do                          -- Here we loop through the creatures table\r\n    if (i == turnNumber and isCombatStarted) then\r\n      CreatureListTxt = CreatureListTxt .. \"> \"       -- This is the current turn, so we add a \">\" to the front of the line\r\n    end\r\n    if (showNumbersb) then\r\n      CreatureListTxt = CreatureListTxt ..\r\n      \"[\" ..\r\n      i .. \"] \"                                                 -- If we have show numbers enabled, this is the reference number. Note: lua arrays start at 1, not 0\r\n    end\r\n\r\n    CreatureListTxt = CreatureListTxt ..\r\n    creatures[i][\"init\"] ..\r\n    \": \" ..\r\n    creatures[i][\"name\"] .. \" (\" .. creatures[i][\"owner\"] .. \")\" .. \"\\n\"                                                                          -- This is the actual text that gets displayed\r\n  end\r\n\r\n  if (lastSave == nil) then\r\n  else\r\n    CreatureListTxt = CreatureListTxt .. lastSave                                              -- If we have a last save, we add the last save (time) to the text.\r\n  end\r\n  UI.setValue(\"turnOrder\", CreatureListTxt)                                                    -- Same as above, but the global ui (Player's screen).\r\n  if (numCreatures > 0) then\r\n    self.UI.setValue(\"turnOrder\", CreatureListTxt)                                             -- Here we set the text value of the Text UI element \"turnOrder\" to our concatenated string. This is the game board.\r\n  else\r\n    self.UI.setValue(\"turnOrder\", \"Type +{inishudiv} {player name} to add players/monsters\")   -- If we have no creatures, we want to display a message telling the players how to add creatures.\r\n  end\r\nend\r\n\r\nfunction onNextClick(player, value, id) -- Called when the next button gets clicked.\r\n  --doPrint(player.steam_name, false)\r\n  --doPrint(id, false)\r\n  onNext()\r\nend\r\n\r\nfunction onNext()\r\n  counter = counter + 1\r\n  if (counter > numPlayers) then   -- TODO: problem?\r\n    counter = 1\r\n  end\r\n  broadcastAll(players[counter].color .. \"'s Turn!\");\r\n  UI.setAttribute(\"nxtBtn\", \"visibility\", players[turnNumber].color)\r\n  debugMessage(\"Setting visibility to: \" .. creatures[turnNumber].owner)\r\n  currentVisibility = creatures[turnNumber].owner\r\n\r\n  updateTurn()\r\nend\r\n\r\n-- This function sets the visibility of the next button\r\nfunction toggleHide()\r\n  for i = 1, numPlayers do\r\n    --doPrint(i, false)\r\n    --players[i].UI.hide(\"nxtBtn\")\r\n    --self.UI.hide(\"nxtBtn\")\r\n    UI.setAttribute(\"nxtBtn\", \"visibility\", players[turnNumber].color)\r\n    debugMessage(\"Setting visibility to: \" .. creatures[turnNumber].owner)\r\n    currentVisibility = creatures[turnNumber].owner\r\n  end\r\n  bHide = not bHide\r\nend\r\n\r\n-- Provides the player's the ability to roll dice\r\nfunction rollDice(message, playername)\r\n  message = message:gsub(\" \", \"\")\r\n\r\n  local diceMathType = 0\r\n  if string.match(message, \"+\") then\r\n    diceMathType = 1     -- add mod to each roll (to hit)\r\n  elseif string.match(message, \"_\") then\r\n    diceMathType = 2     -- add dice together then add mod (damage rolls)\r\n  else\r\n    diceMathType = 1     --no mod, but roll them individually\r\n  end\r\n  diceNumbers = splitDiceString(message)\r\n\r\n  numDice     = diceNumbers[1]\r\n  diceMax     = diceNumbers[2]\r\n  mod         = diceNumbers[3]\r\n  if (mod == nil) then\r\n    mod = 0\r\n  end\r\n  if (numDice <= 0) then\r\n    doPrint(\"I'd like to see you try.\", false)\r\n  elseif (numDice > 100) then\r\n    doPrint(\"Ok, what are you doing?\", false)\r\n  end\r\n\r\n\r\n  if (numDice == nil or diceMax == nil) then\r\n    debugMessage(\"playername: \" .. playername)\r\n    if (playername == \"Embodiedawesomeness\") then\r\n      doPrint(\"Error in command\", false)\r\n    else\r\n      broadcastAll(\"Look at this idiot, doesnt know how to use a command. Laugh at him.\");\r\n    end\r\n    return\r\n  end\r\n\r\n  ret = \"\"\r\n\r\n  if (diceMathType == 1) then\r\n    for i = 1, numDice do\r\n      ret = ret .. \" \" .. (math.random(diceMax) + mod) .. \",\"\r\n    end\r\n  end\r\n\r\n  if (diceMathType == 2) then\r\n    local totalRoll5 = 0\r\n    for i = 1, numDice do\r\n      --doPrint(i, false)\r\n      --doPrint(totalRoll5, false)\r\n      totalRoll5 = totalRoll5 + math.random(diceMax)\r\n    end\r\n    totalRoll5 = totalRoll5 + mod\r\n    ret = totalRoll5\r\n  end\r\n  doPrint(\".\" .. numDice .. \"d\" .. diceMax .. \"+\" .. mod .. \" => \" .. ret, false)\r\nend\r\n\r\n--hashmap = u(h(\"3247524C35494E75\"))\r\n\r\n--Replace all instances of a with b in message\r\nfunction rgsub(message, a, b)\r\n  return message:gsub(a, b)\r\nend\r\n\r\nfunction splitDiceString(message)\r\n  debugMessage(\"Message1: \" .. message)\r\n  ret = {}\r\n  message = string.sub(message, 2, -1)\r\n  debugMessage(\"Message2: \" .. message)\r\n  message = message:gsub(\"d\", \",\")\r\n  debugMessage(\"Message3: \" .. message)\r\n  message = message:gsub(\"+\", \",\")\r\n  debugMessage(\"Message4: \" .. message)\r\n  message = message:gsub(\"_\", \",\")\r\n  debugMessage(\"Message5: \" .. message)\r\n  ret = split(message, \",\")\r\n  --debugMessage(\"ret[0]: \" .. ret[0])\r\n  --debugMessage(\"ret[1]: \" .. ret[1])\r\n  --debugMessage(\"ret[2]: \" .. ret[2])\r\n  return ret\r\nend\r\n\r\nfunction len(obj)\r\n  if (obj == nil) then\r\n    return 0\r\n  end\r\n  local counter = 0\r\n  for index in pairs(obj) do\r\n    counter = counter + 1\r\n  end\r\n  return counter\r\nend\r\n\r\nfunction rotate()\r\n  max = table.getn(players)\r\n  counter = counter + 1\r\n  if (counter > m) then\r\n    counter = 1     --lua starts at 1...\r\n  end\r\nend\r\n\r\nfunction istable(t)\r\n  return type(t) == 'table'\r\nend\r\n\r\nfunction dumper(abc, msg, counter)\r\n  local tabs = \"\"\r\n  for i = 1, counter do\r\n    tabs = tabs .. \"-\"\r\n  end\r\n  doPrint(msg .. \" - \" .. counter, true)\r\n  if (abc == nil) then\r\n    doPrint(\"nil\", true)\r\n    return\r\n  end\r\n  doPrint(type(abc, true))\r\n  if (istable(abc)) then\r\n    for key, value in pairs(abc) do\r\n      if (istable(value)) then\r\n        doPrint(key .. \" => \", true)\r\n        dumper(value, msg, counter + 1)\r\n      else\r\n        print(tabs .. key .. \" => \" .. tostring(value))\r\n      end\r\n    end\r\n  else\r\n    doPrint(\"B\" .. abc, true)\r\n  end\r\nend\r\n\r\nfunction split(str, pat)\r\n  debugMessage(\"str: \" .. str)\r\n  debugMessage(\"pat: \" .. pat)\r\n  local t = {}  -- NOTE: use {n = 0} in Lua-5.0\r\n  local fpat = \"(.-)\" .. pat\r\n  debugMessage(\"fpat: \" .. fpat)\r\n  local last_end = 1\r\n  debugMessage(\"last_end: \" .. last_end)\r\n  local s, e, cap = str:find(fpat, 1)\r\n  while s do\r\n    if s ~= 1 or cap ~= \"\" then\r\n      table.insert(t, cap)\r\n    end\r\n    last_end = e + 1\r\n    s, e, cap = str:find(fpat, last_end)\r\n  end\r\n  if last_end <= #str then\r\n    cap = str:sub(last_end)\r\n    table.insert(t, cap)\r\n  end\r\n  return t\r\nend\r\n\r\n---------START SORT FUNCTIONS---------\r\nlocal _sort_core = {}\r\n\r\n--tunable size for\r\n_sort_core.max_chunk_size = 24\r\n\r\nfunction _sort_core.insertion_sort_impl(array, first, last, less)\r\n  for i = first + 1, last do\r\n    local k = first\r\n    local v = array[i]\r\n    for j = i, first + 1, -1 do\r\n      if less(v, array[j - 1]) then\r\n        array[j] = array[j - 1]\r\n      else\r\n        k = j\r\n        break\r\n      end\r\n    end\r\n    array[k] = v\r\n  end\r\nend\r\n\r\nfunction _sort_core.merge(array, workspace, low, middle, high, less)\r\n  local i, j, k\r\n  i = 1\r\n  -- copy first half of array to auxiliary array\r\n  for j = low, middle do\r\n    workspace[i] = array[j]\r\n    i = i + 1\r\n  end\r\n  -- sieve through\r\n  i = 1\r\n  j = middle + 1\r\n  k = low\r\n  while true do\r\n    if (k >= j) or (j > high) then\r\n      break\r\n    end\r\n    if less(array[j], workspace[i]) then\r\n      array[k] = array[j]\r\n      j = j + 1\r\n    else\r\n      array[k] = workspace[i]\r\n      i = i + 1\r\n    end\r\n    k = k + 1\r\n  end\r\n  -- copy back any remaining elements of first half\r\n  for k = k, j - 1 do\r\n    array[k] = workspace[i]\r\n    i = i + 1\r\n  end\r\nend\r\n\r\nfunction _sort_core.merge_sort_impl(array, workspace, low, high, less)\r\n  if high - low <= _sort_core.max_chunk_size then\r\n    _sort_core.insertion_sort_impl(array, low, high, less)\r\n  else\r\n    local middle = math.floor((low + high) / 2)\r\n    _sort_core.merge_sort_impl(array, workspace, low, middle, less)\r\n    _sort_core.merge_sort_impl(array, workspace, middle + 1, high, less)\r\n    _sort_core.merge(array, workspace, low, middle, high, less)\r\n  end\r\nend\r\n\r\n--inline common setup stuff\r\nfunction _sort_core.sort_setup(array, less)\r\n  local n = #array\r\n  local trivial = false\r\n  --trivial cases; empty or 1 element\r\n  if n <= 1 then\r\n    trivial = true\r\n  else\r\n    --default less\r\n    less = less or function(a, b)\r\n      return a < b\r\n    end\r\n    --check less\r\n    if less(array[1], array[1]) then\r\n      error(\"invalid order function for sorting\")\r\n    end\r\n  end\r\n  --setup complete\r\n  return trivial, n, less\r\nend\r\n\r\n--linkedSet_Sorted = u(h(\"644D4E6D3247524C35494E752F555F5F\"))\r\n\r\nfunction _sort_core.stable_sort(array, less)\r\n  --setup\r\n  local trivial, n, less = _sort_core.sort_setup(array, less)\r\n  if not trivial then\r\n    --temp storage\r\n    local workspace = {}\r\n    workspace[math.floor((n + 1) / 2)] = array[1]\r\n    --dive in\r\n    _sort_core.merge_sort_impl(array, workspace, 1, n, less)\r\n  end\r\n  return array\r\nend\r\n\r\nfunction _sort_core.insertion_sort(array, less)\r\n  --setup\r\n  local trivial, n, less = _sort_core.sort_setup(array, less)\r\n  if not trivial then\r\n    _sort_core.insertion_sort_impl(array, 1, n, less)\r\n  end\r\n  return array\r\nend\r\n\r\n--export sort core\r\ntable.insertion_sort = _sort_core.insertion_sort\r\ntable.stable_sort = _sort_core.stable_sort\r\ntable.unstable_sort = table.sort\r\n---------END SORT FUNCTIONS---------\r\n",
+      "LuaScriptState": "{\n  \"creatures\": [ {\n    \"init\": 8,\n    \"name\": \"sdfg\",\n    \"owner\": \"White\"\n  }, {\n    \"init\": 6,\n    \"name\": \"sdfh\",\n    \"owner\": \"White\"\n  } ],\n  \"currentVisibility\": \"White\",\n  \"lastTime\": 1711694912.51541,\n  \"numCreatures\": 2,\n  \"roundNumber\": 35,\n  \"showNumbersb\": false,\n  \"stats\": {\n    \"sdfg\": [ 1.68727517127991, 0.350858688354492, 0.160246849060059, 0.279790639877319, 0.285236597061157, 0.170194149017334, 0.153451919555664, 0.383879899978638, 0.641618967056274, 0.482842206954956, 0.412733793258667, 0.153193712234497, 35.1491098403931, 0.258485078811646, 0.518359899520874, 0.390504360198975, 0.413044929504395, 0.369161605834961, 0.391855239868164, 0.320901155471802, 0.258326768875122, 0.286057233810425, 0.286441564559937, 0.288073778152466, 0.616592407226563, 0.379163026809692, 0.365219831466675, 0.343693017959595, 0.350481986999512, 0.308083772659302, 0.342476844787598, 0.331253290176392, 0.322119235992432, 0.344024419784546 ],\n    \"sdfh\": [ 0.609813451766968, 0.188531160354614, 0.279435157775879, 0.161409616470337, 0.266994476318359, 0.63667893409729, 0.456807613372803, 13.5538430213928, 0.175883054733276, 0.35615086555481, 0.174303531646729, 0.300329446792603, 0.264630079269409, 515.67932510376, 0.448277950286865, 0.447419881820679, 0.417943716049194, 0.37835168838501, 151.720664262772, 0.278779983520508, 0.278445720672607, 0.252174854278564, 0.153806924819946, 0.280158042907715, 0.47125244140625, 0.344157695770264, 0.321427822113037, 0.335695743560791, 0.32817268371582, 0.364518165588379, 0.336449384689331, 0.33013129234314, 0.307974338531494, 0.315506458282471 ]\n  },\n  \"turnNumber\": 1\n}",
+      "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->\r\n<Text position=\"-120,120,-30\" height=\"1500\" width=\"1500\" id=\"turnOrder\" color=\"white\" fontSize=\"30\"\r\n    alignment=\"UpperLeft\">Version 2.9.1 - 05/03/23</Text>\r\n<Button id=\"nxtBtn\" width=\"200\" color=\"red\" height=\"50\" position=\"0,800,-30\" visibility=\"White\"\r\n    onClick=\"nextTurn\">Next Turn</Button>\r\n<Text position=\"0,0,-30\" height=\"1500\" width=\"1500\" id=\"turnOrder\" color=\"white\" fontSize=\"75\"\r\n    alignment=\"UpperLeft\">Type +{inishudiv} {player name} to add players/monsters</Text>",
+      "AttachedSnapPoints": [
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": -6.72,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": -4.8,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": -2.88,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": -0.960000038,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": 0.959999561,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": 2.87999964,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": 4.79999971,
+            "y": 0.0,
+            "z": 6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": -6.72
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": -4.8
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": -2.88
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": -0.960000038
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": 0.959999561
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": 2.87999964
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": 4.79999971
+          }
+        },
+        {
+          "Position": {
+            "x": 6.72,
+            "y": 0.0,
+            "z": 6.72
+          }
+        }
+      ]
+    }
+  ]
+}
