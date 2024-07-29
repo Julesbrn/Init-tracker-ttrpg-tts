@@ -41,18 +41,18 @@ function toggleUI(player, value, id)
 end
 
 function safeAppendStr(str1, str2)
-  if(str1 == nil) then
+  if (str1 == nil) then
     return str2
   elseif (str2 == nil) then
     return ""
-  else 
+  else
     return str1 .. str2
   end
 end
 
 function cleanVisStr(str)
-  str = string.gsub(str, "^|+", "") -- remove leading |
-  str = string.gsub(str, "|+$", "") -- remove trailing |
+  str = string.gsub(str, "^|+", "")  -- remove leading |
+  str = string.gsub(str, "|+$", "")  -- remove trailing |
   str = string.gsub(str, "%|+", "|") -- remove ||
 
   return str
@@ -73,7 +73,7 @@ function addPlayerVisibility(str, color)
   if str == nil then
     return color
   end
-  str = str.. "|" .. color
+  str = str .. "|" .. color
   return str
 end
 
@@ -152,7 +152,7 @@ function onLoad(save_state)
             color="#990000"
             textColor="#FFFFFF"
             fontSize="12"
-            text="B"
+            text="m"
             onClick="{guid}/minimizeUI"
             >
         </Button>
@@ -186,7 +186,7 @@ function onLoad(save_state)
             color="#990000"
             textColor="#FFFFFF"
             fontSize="12"
-            text="A"
+            text="M"
             onClick="{guid}/restoreUI">
         </Button>
 
@@ -285,19 +285,19 @@ end
 
 -- This is where the chat messages are parsed into actions.
 function onChat(message, sender)
-message = message:gsub("[ ]+", " ")
-debugMessage("---------------\n" .. message .. "\n---------------")
+  message = message:gsub("[ ]+", " ")
+  debugMessage("---------------\n" .. message .. "\n---------------")
   -- We use string.sub for the commands that have parameters. e.g. ".goto 5" runs the goto command with parameter 5.
   -- Exact matches do not take parameters.
   if (string.sub(message, 1, 1) == "+") then
     addCreature(message, sender.color, sender.steam_name)
-  elseif (string.sub(message, 1, 1) == "-") then      -- This and the above look for a single character
+  elseif (string.sub(message, 1, 1) == "-") then     -- This and the above look for a single character
     doFunc(message, sender)
-  elseif (string.sub(message, 1, 4) == ".del") then   -- Look for ".del"
+  elseif (string.sub(message, 1, 4) == ".del") then  -- Look for ".del"
     createConfirm(message, sender)
-  elseif (message == ".next") then                    -- Look for ".next"
+  elseif (message == ".next") then                   -- Look for ".next"
     createConfirm(message, sender)
-  elseif (string.sub(message, 1, 5) == ".goto") then  -- Look for ".goto"
+  elseif (string.sub(message, 1, 5) == ".goto") then -- Look for ".goto"
     local gotoNum = tonumber(string.sub(message, 7))
     if (gotoNum == nil) then
       printToAll("Invalid number. Please reference .shownumbers")
@@ -326,7 +326,7 @@ debugMessage("---------------\n" .. message .. "\n---------------")
     rollDice(message, sender.steam_name)
   else
     debugMessage("============")
-  return true
+    return true
   end
   debugMessage("============")
   return false
@@ -458,10 +458,10 @@ function getStats(isFull) -- Prints the stats for each creature.
     end
     if (isFull) then
       local statTxt = name ..
-      "=> Avg: " ..
-      math.floor(tonumber(tmp)) ..
-      "s Min: " ..
-      math.floor(tonumber(min)) .. "s Max: " .. math.floor(tonumber(max)) .. "s Turns: " .. math.floor(tonumber(num))
+          "=> Avg: " ..
+          math.floor(tonumber(tmp)) ..
+          "s Min: " ..
+          math.floor(tonumber(min)) .. "s Max: " .. math.floor(tonumber(max)) .. "s Turns: " .. math.floor(tonumber(num))
       doPrint(statTxt, false)
     else
       doPrint(name .. " => " .. math.floor(tonumber(tmp)))
@@ -486,7 +486,7 @@ function showNumbers() -- Show creatures with their index in the array.
   updateCreatures()
 end
 
-  function nextTurn(userData, newTurnNumber) -- Note: userData is not used. However, it's being sent from the button. The button fails without it.
+function nextTurn(userData, newTurnNumber) -- Note: userData is not used. However, it's being sent from the button. The button fails without it.
   if (newTurnNumber == "-1") then
   else
     printToColor("Don't do that.", userData.color)
@@ -599,13 +599,13 @@ function addCreature(message, color, steam_name)
   debugMessage("addCreature: |" .. message .. "|")
 
   --This if statement is because of Stebe.
-  if (string.match(message, "%(.*%)")) then                 -- % shows that the character needs to be taken litterally. Normally "\(" in other languages.
-    message = string.gsub(message, "%(.*%)", "(idiot)")     --if you try to add a fake color in your monster name, it gets replaced.
+  if (string.match(message, "%(.*%)")) then             -- % shows that the character needs to be taken litterally. Normally "\(" in other languages.
+    message = string.gsub(message, "%(.*%)", "(idiot)") --if you try to add a fake color in your monster name, it gets replaced.
   end
 
   local tmp = split(message, " ")
   local initNum = tmp[1]
-  local isNum = string.match(initNum, '[0-9]+')   -- verify this is a number via regex
+  local isNum = string.match(initNum, '[0-9]+') -- verify this is a number via regex
   debugMessage("(initNum|isNum) = (" .. initNum .. "|" .. isNum .. ")")
   if (isNum == nil) then
     doPrint("Not a number. Inititive needs to be a number", false)
@@ -645,7 +645,7 @@ function addCreature(message, color, steam_name)
   local tmp = {}
   tmp["init"] = tonumber(initNum)
   tmp["name"] = creatureName
-  tmp["owner"] = color   --"host"
+  tmp["owner"] = color --"host"
   --dump(creatures)
   --dump(tmp)
   dumper(creatures, "creatures", 0)
@@ -727,7 +727,7 @@ function startInit()
     return
   end
   isCombatStarted = true
-  debugMessage("test123")   --doPrint("startInit(, false)")
+  debugMessage("test123") --doPrint("startInit(, false)")
   if (numCreatures == 0) then
     doPrint("No creatures added. use +Inititive CreatureName first.", false)
     return
@@ -752,7 +752,7 @@ end
 
 function broadcastAll(msg)
   rgb = { r = 1, g = 1, b = 1 }
-  broadcastToAll(msg, rgb)   -- built in function
+  broadcastToAll(msg, rgb) -- built in function
 end
 
 function compare(a, b)
@@ -784,34 +784,41 @@ function updateCreatures()
   elseif (numCreatures > 0) then
     CreatureListTxt = "Setup Phase\n"
   else
-    CreatureListTxt = ""   -- If we have no creatures, we don't want to display anything
+    CreatureListTxt = "" -- If we have no creatures, we don't want to display anything
   end
 
-  for i = 1, numCreatures do                          -- Here we loop through the creatures table
+  for i = 1, numCreatures do -- Here we loop through the creatures table
     if (i == turnNumber and isCombatStarted) then
-      CreatureListTxt = CreatureListTxt .. "> "       -- This is the current turn, so we add a ">" to the front of the line
+      CreatureListTxt = CreatureListTxt ..
+          "> " -- This is the current turn, so we add a ">" to the front of the line
     end
     if (showNumbersb) then
       CreatureListTxt = CreatureListTxt ..
-      "[" ..
-      i .. "] "                                                 -- If we have show numbers enabled, this is the reference number. Note: lua arrays start at 1, not 0
+          "[" ..
+          i ..
+          "] " -- If we have show numbers enabled, this is the reference number. Note: lua arrays start at 1, not 0
     end
 
     CreatureListTxt = CreatureListTxt ..
-    creatures[i]["init"] ..
-    ": " ..
-    creatures[i]["name"] .. " (" .. creatures[i]["owner"] .. ")" .. "\n"                                                                          -- This is the actual text that gets displayed
+        creatures[i]["init"] ..
+        ": " ..
+        creatures[i]["name"] ..
+        " (" ..
+        creatures[i]["owner"] ..
+        ")" ..
+        "\n" -- This is the actual text that gets displayed
   end
 
   if (lastSave == nil) then
   else
-    CreatureListTxt = CreatureListTxt .. lastSave                                              -- If we have a last save, we add the last save (time) to the text.
+    CreatureListTxt = CreatureListTxt ..
+        lastSave                                                                             -- If we have a last save, we add the last save (time) to the text.
   end
-  UI.setValue("turnOrder", CreatureListTxt)                                                    -- Same as above, but the global ui (Player's screen).
+  UI.setValue("turnOrder", CreatureListTxt)                                                  -- Same as above, but the global ui (Player's screen).
   if (numCreatures > 0) then
-    self.UI.setValue("turnOrder", CreatureListTxt)                                             -- Here we set the text value of the Text UI element "turnOrder" to our concatenated string. This is the game board.
+    self.UI.setValue("turnOrder", CreatureListTxt)                                           -- Here we set the text value of the Text UI element "turnOrder" to our concatenated string. This is the game board.
   else
-    self.UI.setValue("turnOrder", "Type +{inishudiv} {player name} to add players/monsters")   -- If we have no creatures, we want to display a message telling the players how to add creatures.
+    self.UI.setValue("turnOrder", "Type +{inishudiv} {player name} to add players/monsters") -- If we have no creatures, we want to display a message telling the players how to add creatures.
   end
 end
 
@@ -823,7 +830,7 @@ end
 
 function onNext()
   counter = counter + 1
-  if (counter > numPlayers) then   -- TODO: problem?
+  if (counter > numPlayers) then -- TODO: problem?
     counter = 1
   end
   broadcastAll(players[counter].color .. "'s Turn!");
@@ -853,11 +860,11 @@ function rollDice(message, playername)
 
   local diceMathType = 0
   if string.match(message, "+") then
-    diceMathType = 1     -- add mod to each roll (to hit)
+    diceMathType = 1 -- add mod to each roll (to hit)
   elseif string.match(message, "_") then
-    diceMathType = 2     -- add dice together then add mod (damage rolls)
+    diceMathType = 2 -- add dice together then add mod (damage rolls)
   else
-    diceMathType = 1     --no mod, but roll them individually
+    diceMathType = 1 --no mod, but roll them individually
   end
   diceNumbers = splitDiceString(message)
 
@@ -945,7 +952,7 @@ function rotate()
   max = table.getn(players)
   counter = counter + 1
   if (counter > m) then
-    counter = 1     --lua starts at 1...
+    counter = 1 --lua starts at 1...
   end
 end
 
@@ -954,7 +961,7 @@ function istable(t)
 end
 
 function dumper(variable, identifier, counter)
-  if not DEBUG_MODE then 
+  if not DEBUG_MODE then
     return
   end
 
@@ -982,7 +989,7 @@ function dumper(variable, identifier, counter)
     end
   else
     doPrint("<variable>")
-      doPrint(variable, true)
+    doPrint(variable, true)
     doPrint("</variable>")
   end
   if counter == 0 then
@@ -993,7 +1000,7 @@ end
 function split(str, pat)
   debugMessage("str: " .. str)
   debugMessage("pat: " .. pat)
-  local t = {}  -- NOTE: use {n = 0} in Lua-5.0
+  local t = {} -- NOTE: use {n = 0} in Lua-5.0
   local fpat = "(.-)" .. pat
   debugMessage("fpat: " .. fpat)
   local last_end = 1
