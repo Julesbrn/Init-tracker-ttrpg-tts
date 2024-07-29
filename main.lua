@@ -1,4 +1,4 @@
---V2.9.9.4 N/A
+VERSION = "V2.9.9.5 - 07/28/24" -- N/A
 math.randomseed(os.time())
 
 --Global variables
@@ -26,10 +26,12 @@ lastSave = nil
 -- End global variables
 
 function doPrint(msg, isDbg)
-  if (DEBUG_MODE and isDbg) then
-    printToAll(msg)
-  elseif (not isDbg) then
-    printToAll(msg)
+  if isDbg then
+    if DEBUG_MODE then
+      printToAll(msg) -- It's a debug message and we're in debug mode.
+    end
+  else
+    printToAll(msg) -- It's a non-debug message, print it anyway.
   end
 end
 
@@ -38,31 +40,65 @@ function toggleUI(player, value, id)
   UI.hide("mapSelection")
 end
 
+function safeAppendStr(str1, str2)
+  if(str1 == nil) then
+    return str2
+  elseif (str2 == nil) then
+    return ""
+  else 
+    return str1 .. str2
+  end
+end
+
+function cleanVisStr(str)
+  str = string.gsub(str, "^|+", "") -- remove leading |
+  str = string.gsub(str, "|+$", "") -- remove trailing |
+  str = string.gsub(str, "%|+", "|") -- remove ||
+
+  return str
+end
+
+function removePlayerVisibility(str, color)
+  if str == nil then
+    return "invisible"
+  end
+  dumper(str, "str", 0)
+  dumper(color, "color", 0)
+  str = string.gsub(str, color, "")
+  str = cleanVisStr(str)
+  return str
+end
+
+function addPlayerVisibility(str, color)
+  if str == nil then
+    return color
+  end
+  str = str.. "|" .. color
+  return str
+end
+
 function minimizeUI(player, value, id)
-  UI.setAttribute("mapSelection", "height", "25")
-  UI.setAttribute("mapSelection", "width", "40")
-  UI.setAttribute("mapSelectionScroll", "width", "0")
-  UI.setAttribute("mapSelectionScroll", "height", "0")
-  UI.setAttribute("minimizeBtn", "visibility", "Invisible")
-  UI.setAttribute("title", "visibility", "Invisible")
-  UI.setAttribute("restoreBtn", "visibility", "")
-  UI.setAttribute("restoreBtn", "textColor", "White")
-  --minimizeBtn"restoreBtn
+  local mapSelectionScroll2 = UI.getAttribute("mapSelection2", "visibility")
+  mapSelectionScroll2 = addPlayerVisibility(mapSelectionScroll2, player.color)
+
+  local mapSelectionScroll1 = UI.getAttribute("mapSelection1", "visibility")
+  mapSelectionScroll1 = removePlayerVisibility(mapSelectionScroll1, player.color)
+  UI.setAttribute("mapSelection1", "visibility", mapSelectionScroll1)
+  UI.setAttribute("mapSelection2", "visibility", mapSelectionScroll2)
 end
 
 function restoreUI(player, value, id)
-  UI.setAttribute("mapSelection", "height", "500")
-  UI.setAttribute("mapSelection", "width", "480")
-  UI.setAttribute("mapSelectionScroll", "height", "480")
-  UI.setAttribute("mapSelectionScroll", "width", "480")
-  UI.setAttribute("minimizeBtn", "visibility", "")
-  UI.setAttribute("minimizeBtn", "textColor", "White")
-  UI.setAttribute("restoreBtn", "visibility", "Invisible")
-  UI.setAttribute("title", "visibility", "")
+  local mapSelectionScroll2 = UI.getAttribute("mapSelection2", "visibility")
+  mapSelectionScroll2 = removePlayerVisibility(mapSelectionScroll2, player.color)
+
+  local mapSelectionScroll1 = UI.getAttribute("mapSelection1", "visibility")
+  mapSelectionScroll1 = addPlayerVisibility(mapSelectionScroll1, player.color)
+  UI.setAttribute("mapSelection1", "visibility", mapSelectionScroll1)
+  UI.setAttribute("mapSelection2", "visibility", mapSelectionScroll2)
 end
 
 function onLoad(save_state)
-  --printToAll("onLoad called")
+  self.UI.setValue("VersionNumber", VERSION)
   globalUI = [[
     <Defaults>
     <Panel id="Window" class="TankChessPanel" color="#595959" outline="#635351" outlineSize="2 -2" />
@@ -71,7 +107,10 @@ function onLoad(save_state)
     <Image class="mapImage" width="144" height="144" rectAlignment="UpperCenter" offsetXY="0 -3" />
 </Defaults>
 
-<Panel id="mapSelection" class="TankChessPanel"
+<Button id="nxtBtnUI" width="200" color="red" height="50" position="0,300,0" visibility=""
+    onClick="{guid}/nextTurn">Next Turn</Button>
+
+<Panel id="mapSelection1" class="TankChessPanel"
     width="480"
     height="500"
     rectAlignment="UpperCenter"
@@ -79,6 +118,7 @@ function onLoad(save_state)
     allowDragging="true"
     showAnimation="FadeIn"
     showAnimationDelay="2"
+    visibility="White|Brown|Red|Orange|Yellow|Green|Teal|Blue|Purple|Pink|Grey|Black"
     returnToOriginalPositionWhenReleased="false">
     <VerticalScrollView
         id="mapSelectionScroll"
@@ -112,10 +152,33 @@ function onLoad(save_state)
             color="#990000"
             textColor="#FFFFFF"
             fontSize="12"
-            text="M"
-            onClick="{guid}/minimizeUI">
+            text="B"
+            onClick="{guid}/minimizeUI"
+            >
         </Button>
 
+    </HorizontalLayout>
+    <Text id="title" text="Initive Tracker - {version}" alignment="UpperLeft"
+        fontSize="18"
+        offsetXY="5 0"
+        fontStyle="Bold" color="#FFFFFF"></Text>
+</Panel>
+
+<Panel id="mapSelection2" class="TankChessPanel"
+    width="200"
+    height="21"
+    rectAlignment="UpperCenter"
+    offsetXY="0 -250"
+    allowDragging="true"
+    visibility="invisible"
+    showAnimation="FadeIn"
+    showAnimationDelay="2"
+    returnToOriginalPositionWhenReleased="false">
+    <HorizontalLayout
+        rectAlignment="UpperRight"
+        width="40"
+        height="20"
+    >
         <Button id="restoreBtn"
             position="10,10"
             width="20"
@@ -123,19 +186,19 @@ function onLoad(save_state)
             color="#990000"
             textColor="#FFFFFF"
             fontSize="12"
-            text="M"
-            visibility="Invisible"
+            text="A"
             onClick="{guid}/restoreUI">
         </Button>
 
     </HorizontalLayout>
-    <Text id="title" text="Initive Tracker - Version 2.9.9.4 - 05/03/23" alignment="UpperLeft"
+    <Text id="title" text="Initive Tracker" alignment="UpperLeft"
         fontSize="18"
         offsetXY="5 0"
         fontStyle="Bold" color="#FFFFFF"></Text>
 </Panel>
 ]]
   globalUI = string.gsub(globalUI, "{guid}", self.guid)
+  globalUI = string.gsub(globalUI, "{version}", VERSION)
   --print(globalUI)
   UI.setXml(globalUI)
   UI.hide("Window")
@@ -423,7 +486,13 @@ function showNumbers() -- Show creatures with their index in the array.
   updateCreatures()
 end
 
-function nextTurn(userData, newTurnNumber) -- Note: userData is not used. However, it's being sent from the button. The button fails without it.
+  function nextTurn(userData, newTurnNumber) -- Note: userData is not used. However, it's being sent from the button. The button fails without it.
+  if (newTurnNumber == "-1") then
+  else
+    printToColor("Don't do that.", userData.color)
+    return -- -2 means right click. -3 means middle click.
+  end
+
   updateCreatures()
   numCreatures = len(creatures)
   if (not isCombatStarted and numCreatures > 0) then
@@ -912,7 +981,9 @@ function dumper(variable, identifier, counter)
       end
     end
   else
-    doPrint("B" .. variable, true)
+    doPrint("<variable>")
+      doPrint(variable, true)
+    doPrint("</variable>")
   end
   if counter == 0 then
     doPrint("</dumper>\n")

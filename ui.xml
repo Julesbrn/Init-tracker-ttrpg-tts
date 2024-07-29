@@ -1,6 +1,6 @@
 <!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->
-<Text position="-120,120,-30" height="1500" width="1500" id="turnOrder" color="white" fontSize="30"
-    alignment="UpperLeft">Version 2.9.9.3 - 05/03/23</Text>
+<Text position="-120,120,-30" height="1500" width="1500" id="VersionNumber" color="white" fontSize="30"
+    alignment="UpperLeft">Version 2.9.1 - 05/03/23</Text>
 <Button id="nxtBtn" width="200" color="red" height="50" position="0,800,-30" visibility="White"
     onClick="nextTurn">Next Turn</Button>
 <Text position="0,0,-30" height="1500" width="1500" id="turnOrder" color="white" fontSize="75"
