@@ -1,4 +1,4 @@
---V2.9.9.3 N/A
+--V2.9.9.4 N/A
 math.randomseed(os.time())
 
 --Global variables
@@ -129,7 +129,7 @@ function onLoad(save_state)
         </Button>
 
     </HorizontalLayout>
-    <Text id="title" text="Initive Tracker - Version 2.9.9.3 - 05/03/23" alignment="UpperLeft"
+    <Text id="title" text="Initive Tracker - Version 2.9.9.4 - 05/03/23" alignment="UpperLeft"
         fontSize="18"
         offsetXY="5 0"
         fontStyle="Bold" color="#FFFFFF"></Text>
@@ -222,7 +222,8 @@ end
 
 -- This is where the chat messages are parsed into actions.
 function onChat(message, sender)
-  message = message:gsub("[ ]+", " ")
+message = message:gsub("[ ]+", " ")
+debugMessage("---------------\n" .. message .. "\n---------------")
   -- We use string.sub for the commands that have parameters. e.g. ".goto 5" runs the goto command with parameter 5.
   -- Exact matches do not take parameters.
   if (string.sub(message, 1, 1) == "+") then
@@ -261,8 +262,10 @@ function onChat(message, sender)
   elseif (string.sub(message, 1, 1) == ".") then
     rollDice(message, sender.steam_name)
   else
-    return true
+    debugMessage("============")
+  return true
   end
+  debugMessage("============")
   return false
 end
 
@@ -395,7 +398,7 @@ function getStats(isFull) -- Prints the stats for each creature.
       "=> Avg: " ..
       math.floor(tonumber(tmp)) ..
       "s Min: " ..
-      math.floor(tonumber(min)) .. "s Max: " .. math.floor(tonumber(max)) .. "s Num: " .. math.floor(tonumber(num))
+      math.floor(tonumber(min)) .. "s Max: " .. math.floor(tonumber(max)) .. "s Turns: " .. math.floor(tonumber(num))
       doPrint(statTxt, false)
     else
       doPrint(name .. " => " .. math.floor(tonumber(tmp)))
@@ -433,7 +436,7 @@ function nextTurn(userData, newTurnNumber) -- Note: userData is not used. Howeve
 
   if (turnNumber < 0 or turnNumber > numCreatures or turnNumber == nil or nextTurn == '') then
     doPrint("There was an error in the turn number. It has been reset to start.", false)
-    turnNumber = 0
+    turnNumber = 1
   end
   --doPrint((os.time(, false) - lastNext))
   if ((os.time() - lastNext) < 0.15) then
@@ -524,6 +527,7 @@ end
 
 function addCreature(message, color, steam_name)
   message = rgsub(message, "+", "")
+  debugMessage("addCreature: |" .. message .. "|")
 
   --This if statement is because of Stebe.
   if (string.match(message, "%(.*%)")) then                 -- % shows that the character needs to be taken litterally. Normally "\(" in other languages.
@@ -533,12 +537,14 @@ function addCreature(message, color, steam_name)
   local tmp = split(message, " ")
   local initNum = tmp[1]
   local isNum = string.match(initNum, '[0-9]+')   -- verify this is a number via regex
+  debugMessage("(initNum|isNum) = (" .. initNum .. "|" .. isNum .. ")")
   if (isNum == nil) then
     doPrint("Not a number. Inititive needs to be a number", false)
     return
   end
 
   local creatureName = removePrefix(message)
+  debugMessage("creatureName :" .. creatureName .. ":")
 
 
   if (creatureName == nil or creatureName == "") then
@@ -547,8 +553,11 @@ function addCreature(message, color, steam_name)
   end
 
   if (numCreatures > 0) then
-    --doPrint("Current init: " .. creatures[turnNumber]["init"], false)
-    --doPrint("New init: " .. a, false)
+    if DEBUG_MODE then
+      dumper(creatures, "creatures", 0)
+      dumper(creatures[turnNumber], "creatures[turnNumber]", 0)
+      dumper(creatures[turnNumber]["init"], "creatures[turnNumber][\"init\"]", 0)
+    end
     if (tonumber(creatures[turnNumber]["init"]) < tonumber(initNum)) then
       turnNumber = turnNumber + 1
     end
@@ -570,6 +579,7 @@ function addCreature(message, color, steam_name)
   tmp["owner"] = color   --"host"
   --dump(creatures)
   --dump(tmp)
+  dumper(creatures, "creatures", 0)
   table.insert(creatures, tmp)
   --creatures.insert(tmp)
 
@@ -581,6 +591,7 @@ function stopInit() -- Stops the current session.
   creatures = {}
   --stats = {}    turnNumber = 1
   numCreatures = 0
+  turnNumber = 1
   currentVisibility = "clubs"
   UI.setAttribute("nxtBtn", "visibility", "clubs")
   updateCreatures()
@@ -873,28 +884,38 @@ function istable(t)
   return type(t) == 'table'
 end
 
-function dumper(abc, msg, counter)
+function dumper(variable, identifier, counter)
+  if not DEBUG_MODE then 
+    return
+  end
+
+  if counter == 0 then
+    doPrint("\n<dumper identifier=\"" .. identifier .. "\">")
+  end
   local tabs = ""
   for i = 1, counter do
     tabs = tabs .. "-"
   end
-  doPrint(msg .. " - " .. counter, true)
-  if (abc == nil) then
+  doPrint(identifier .. " - " .. counter, true)
+  if (variable == nil) then
     doPrint("nil", true)
     return
   end
-  doPrint(type(abc, true))
-  if (istable(abc)) then
-    for key, value in pairs(abc) do
+  doPrint(type(variable, true))
+  if (istable(variable)) then
+    for key, value in pairs(variable) do
       if (istable(value)) then
         doPrint(key .. " => ", true)
-        dumper(value, msg, counter + 1)
+        dumper(value, identifier, counter + 1)
       else
         print(tabs .. key .. " => " .. tostring(value))
       end
     end
   else
-    doPrint("B" .. abc, true)
+    doPrint("B" .. variable, true)
+  end
+  if counter == 0 then
+    doPrint("</dumper>\n")
   end
 end
 
